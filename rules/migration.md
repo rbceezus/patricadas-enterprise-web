@@ -28,7 +28,7 @@ arquivo com Orval (ADR-001, seção Contrato de API).
 ## Procedimento ao mudar o contrato
 1. Confirme que a mudança já existe do lado da API (endpoint, campo ou
    schema novo já implementado e com `openapi.json` atualizado).
-2. Rode o script de regeneração do cliente (ver `rules/operations.md`
+2. Rode o script de regeneração do cliente (ver `rules/operacao.md`
    quando o script existir).
 3. Rode `git diff` sobre a pasta do cliente gerado. Essa diferença é o
    "contrato mudou" ficando visível — é o substituto, com repositórios
