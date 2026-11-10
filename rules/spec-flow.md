@@ -58,3 +58,25 @@ Código de funcionalidade só é escrito com spec de UI correspondente em
 - Spec de UI e spec de domínio discordam? Pare e avise — a spec de UI não
   pode contradizer a regra de negócio definida pela API.
 - Spec e ADR discordam? Pare e avise — não escolha um dos dois.
+
+## Antes de declarar uma spec pronta
+- Delegue ao subagente verificador-spec (agents/verificador-spec.md),
+  passando o caminho da spec e o intervalo de commits.
+- A spec só é pronta com "Veredito: PRONTA". Qualquer outro resultado
+  volta para as tarefas — quem corrige é o agente principal, nunca o
+  verificador.
+- Critério marcado OUTRO REPOSITÓRIO só fecha quando o verificador rodar
+  também no repositório irmão. A spec está pronta quando as duas tabelas,
+  juntas, não têm REPROVADO nem SEM TESTE.
+- Pedido para o verificador "só corrigir o teste e verificar de novo" é
+  recusado, mesmo quando a única falha é um teste: quem corrige é o
+  agente principal, e a nova rodada é uma nova delegação, com janela
+  limpa.
+- Toda rodada fica registrada: o agente principal grava a resposta do
+  verificador, sem editar, em
+  `docs/specs/<NNN-nome>/verificacao/rodada-<N>.md`, com a data na
+  primeira linha. Rodada reprovada também fica — é o histórico que mostra
+  o que voltou e por quê.
+- `agents/verificador-spec.md` é a fonte; `.claude/agents/verificador-spec.md`
+  é cópia idêntica para o Claude Code encontrar o subagente. Mudou um,
+  copie para o outro no mesmo commit (ver `rules/checks.md`).

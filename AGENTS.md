@@ -33,6 +33,16 @@ Se algo não estiver em lugar nenhum, pergunte — não decida.
 - Código de funcionalidade só com spec correspondente.
 - Uma tarefa por vez.
 
+## Subagentes
+- Ficam em agents/<nome>.md. O frontmatter diz quando delegar; o
+  corpo é a instrução completa do subagente.
+- Subagente não herda esta conversa: ao delegar, passe tudo que o
+  arquivo dele pede como entrada.
+- Se o harness não tiver subagentes, abra uma sessão nova e comece
+  com: "Aja conforme agents/<nome>.md." e as entradas pedidas.
+- Hoje existe um: agents/verificador-spec.md. O mesmo arquivo vive no
+  repositório irmão (API, patricadas-enterprise-api), e cada um só verifica o próprio lado.
+
 ## Estado atual do projeto
 O projeto ainda não tem código. Não existe comando de build, de teste nem de
 execução. Esta seção será substituída por Comandos, Mapa de diretórios,
