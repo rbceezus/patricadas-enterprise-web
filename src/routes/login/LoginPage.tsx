@@ -1,8 +1,10 @@
 import { type FormEvent, useId, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { type DependenciasLogin, fazerLogin } from "@/lib/login"
 
 const STATS = [
   { value: "3 itens", label: "por pessoa" },
@@ -10,25 +12,44 @@ const STATS = [
   { value: "0 linhas", label: "para preencher" },
 ] as const
 
-export function LoginPage() {
+/**
+ * Parte do formulário que depende do envio: mensagem de erro (CA-02) e botão
+ * desabilitado enquanto envia (CA-01). Separada para poder ser testada em
+ * cada estado sem simular o navegador.
+ */
+export function EstadoEnvio({ enviando, erro }: { enviando: boolean; erro: string | null }) {
+  return (
+    <>
+      {erro ? (
+        <p role="alert" className="text-[13px] text-[var(--color-state-danger-fg)]">
+          {erro}
+        </p>
+      ) : null}
+
+      <Button type="submit" size="block" disabled={enviando}>
+        {enviando ? "Entrando…" : "Entrar"}
+      </Button>
+    </>
+  )
+}
+
+export function LoginPage({ deps }: { deps: DependenciasLogin }) {
   const emailId = useId()
   const passwordId = useId()
+  const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
     setIsSubmitting(true)
-
-    // Autenticação real depende da API (ver AGENTS.md — contrato ainda
-    // não existe). Por ora, apenas simula o estado de carregamento.
-    window.setTimeout(() => {
-      setIsSubmitting(false)
-      setError("Login ainda não está disponível nesta versão.")
-    }, 600)
+    const resultado = await fazerLogin(deps, email, password)
+    setIsSubmitting(false)
+    if ("erro" in resultado) setError(resultado.erro)
+    else navigate(resultado.destino, { replace: true })
   }
 
   return (
@@ -116,19 +137,7 @@ export function LoginPage() {
               />
             </div>
 
-            {error ? (
-              <p role="alert" className="text-[13px] text-[var(--color-state-danger-fg)]">
-                {error}
-              </p>
-            ) : null}
-
-            <Button type="submit" size="block" disabled={isSubmitting}>
-              {isSubmitting ? "Entrando…" : "Entrar"}
-            </Button>
-
-            <Button type="button" variant="ghost" size="block">
-              Entrar como Operações →
-            </Button>
+            <EstadoEnvio enviando={isSubmitting} erro={error} />
           </form>
 
           <p className="mt-6 text-[12px] text-[var(--color-text)]/55">

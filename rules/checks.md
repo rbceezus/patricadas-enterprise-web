@@ -11,8 +11,8 @@ alwaysApply: true
 Sempre que você for dizer "pronto", "implementado" ou "funcionando".
 
 ## Procedimento
-1. Rode `<COMANDO-TESTES>` (Vitest, ADR-001). Cole a última linha da saída
-   na resposta.
+1. Rode `npm test` (Vitest, ADR-001). Cole a última linha da saída na
+   resposta.
 2. Se a tarefa tocou no cliente HTTP gerado, rode o script de regeneração
    a partir do `openapi.json` e confirme `git diff` vazio ou esperado (ver
    `rules/migration.md`) — cliente desatualizado falha o CI.
@@ -40,7 +40,5 @@ trouxe surpresa. As duas coisas, não uma.
   do lado da API está desatualizado, não o cliente.
 
 ## Estado atual do projeto
-Os comandos do passo 3 existem (`package.json`). `<COMANDO-TESTES>` ainda
-não existe: o Vitest não está instalado e não há nenhum teste no
-repositório. Até ele existir, nenhum critério de UI tem prova e o
-verificador marca o passo 1 como "não definido em rules/checks.md".
+Os comandos dos passos 1 e 3 existem (`package.json`). Ainda não há
+cliente gerado (Orval), então o passo 2 não se aplica.
