@@ -10,8 +10,9 @@ Tela de entrada do sistema. Autentica e-mail/senha e redireciona para a
 
 ## Comportamento de UI
 
-- Campos: E-mail e Senha, mais botão primário de envio (`btn-block`, 40px)
-  e um botão ghost "Entrar como Operações →" (conforme layout.md).
+- Campos: E-mail e Senha, mais botão primário de envio (`btn-block`, 40px).
+  O botão ghost "Entrar como Operações →" do layout.md foi removido nesta
+  versão (ver CA-05 e "Perguntas respondidas").
 - Enquanto a submissão está em andamento, o botão primário fica desabilitado
   (ver estado "Desabilitado" em layout.md §4).
 - Erro de credencial inválida aparece perto do formulário, sem recarregar a
