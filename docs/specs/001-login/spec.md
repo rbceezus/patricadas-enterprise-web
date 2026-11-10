@@ -27,8 +27,32 @@ Tela de entrada do sistema. Autentica e-mail/senha e redireciona para a
 - Cadastro de usuário, recuperação de senha (idem spec de domínio).
 - Validação de força de senha além do que a API já recusar.
 
-## Perguntas em aberto
+## Critérios de aceite (UI)
 
-- O botão "Entrar como Operações →" loga direto (conta fixa de demo) ou só
-  muda o formulário para indicar que está entrando como Operações? A spec
-  de domínio não cobre isso — confirmar antes de implementar.
+Acrescentados na prática de subagentes (2026-11-10). A prova de cada um
+vive neste repositório; a regra de papel e de sessão é da API (spec 001 de
+domínio, CA-01..CA-04).
+
+- **CA-01** A tela tem e-mail, senha e o botão Entrar; o botão fica
+  desabilitado enquanto a submissão está em andamento.
+- **CA-02** Credencial inválida mostra "E-mail ou senha incorretos." perto
+  do formulário, sem recarregar a página; falha de rede mostra mensagem de
+  indisponibilidade.
+- **CA-03** Sucesso pergunta o papel a `GET /v1/me` e redireciona:
+  Colaborador para `/catalogo`, Operações para `/operacoes`. Conta sem
+  vínculo (403) não entra e a sessão é encerrada.
+- **CA-04** A nota fixa "Cada pessoa vê apenas os próprios empréstimos."
+  aparece abaixo do formulário.
+- **CA-05** Não existe entrada direta como Operações.
+
+## Perguntas respondidas
+
+- Botão "Entrar como Operações →": **removido nesta versão**. Uma conta fixa
+  de demonstração seria uma credencial de Operações exposta na tela, e o
+  papel já vem da API (CA-03). Volta a ser pergunta quando houver fluxo de
+  Operações.
+- Catálogo e Painel ainda não existem: as rotas `/catalogo` e `/operacoes`
+  mostram só quem entrou e o botão Sair, até as specs 002/003 e 004.
+- Chamada a `GET /v1/me` escrita à mão (`src/lib/supabase.ts`): o cliente
+  gerado pelo Orval (ADR-001) depende do `openapi.json`, que a API ainda não
+  publica (AZ-05). Desvio registrado no ENTREGA.md.
