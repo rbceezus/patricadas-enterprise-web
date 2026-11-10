@@ -16,14 +16,18 @@ Sempre que você for dizer "pronto", "implementado" ou "funcionando".
 2. Se a tarefa tocou no cliente HTTP gerado, rode o script de regeneração
    a partir do `openapi.json` e confirme `git diff` vazio ou esperado (ver
    `rules/migration.md`) — cliente desatualizado falha o CI.
-3. Rode `<COMANDO-BUILD>` antes de qualquer push. Build que quebra na
-   Vercel é o feedback mais lento e mais caro deste projeto.
+3. Rode `npm run build` (inclui `tsc -b`) e `npm run lint` antes de
+   qualquer push. Build que quebra na Vercel é o feedback mais lento e
+   mais caro deste projeto.
 4. Rode `git status --short`. Só podem aparecer arquivos do escopo da
    tarefa.
 5. Diga qual critério de aceitação da spec de UI esta tarefa atende.
+6. Se a tarefa mexeu no verificador, confirme que a cópia do harness é
+   idêntica à fonte:
+   `git diff --no-index --exit-code agents/verificador-spec.md .claude/agents/verificador-spec.md`
 
 ## Verificação
-Pronto = os quatro comandos terminaram sem falha E o `git status` não
+Pronto = os comandos acima terminaram sem falha E o `git status` não
 trouxe surpresa. As duas coisas, não uma.
 
 ## Não faça
@@ -36,7 +40,7 @@ trouxe surpresa. As duas coisas, não uma.
   do lado da API está desatualizado, não o cliente.
 
 ## Estado atual do projeto
-`<COMANDO-TESTES>` e `<COMANDO-BUILD>` ainda não existem: não há código,
-suíte de testes nem script de build (andar zero pendente). Esta seção
-passa a valer assim que esses comandos existirem de fato; até lá, os
-passos 1 e 3 não são executáveis.
+Os comandos do passo 3 existem (`package.json`). `<COMANDO-TESTES>` ainda
+não existe: o Vitest não está instalado e não há nenhum teste no
+repositório. Até ele existir, nenhum critério de UI tem prova e o
+verificador marca o passo 1 como "não definido em rules/checks.md".
