@@ -12,6 +12,27 @@ const STATS = [
   { value: "0 linhas", label: "para preencher" },
 ] as const
 
+/**
+ * Parte do formulário que depende do envio: mensagem de erro (CA-02) e botão
+ * desabilitado enquanto envia (CA-01). Separada para poder ser testada em
+ * cada estado sem simular o navegador.
+ */
+export function EstadoEnvio({ enviando, erro }: { enviando: boolean; erro: string | null }) {
+  return (
+    <>
+      {erro ? (
+        <p role="alert" className="text-[13px] text-[var(--color-state-danger-fg)]">
+          {erro}
+        </p>
+      ) : null}
+
+      <Button type="submit" size="block" disabled={enviando}>
+        {enviando ? "Entrando…" : "Entrar"}
+      </Button>
+    </>
+  )
+}
+
 export function LoginPage({ deps }: { deps: DependenciasLogin }) {
   const emailId = useId()
   const passwordId = useId()
@@ -116,15 +137,7 @@ export function LoginPage({ deps }: { deps: DependenciasLogin }) {
               />
             </div>
 
-            {error ? (
-              <p role="alert" className="text-[13px] text-[var(--color-state-danger-fg)]">
-                {error}
-              </p>
-            ) : null}
-
-            <Button type="submit" size="block" disabled={isSubmitting}>
-              {isSubmitting ? "Entrando…" : "Entrar"}
-            </Button>
+            <EstadoEnvio enviando={isSubmitting} erro={error} />
           </form>
 
           <p className="mt-6 text-[12px] text-[var(--color-text)]/55">
