@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 
+import type { Equipamento } from "@/lib/catalogo"
 import type { DependenciasLogin, Perfil } from "@/lib/login"
 
 // Só a chave pública (publishable/anon). A service_role nunca entra no front.
@@ -19,6 +20,20 @@ export async function buscarPerfil(token: string): Promise<{ perfil: Perfil } | 
     const r = await fetch(`${apiBase}/me`, { headers: { Authorization: `Bearer ${token}` } })
     if (!r.ok) return { status: r.status }
     return { perfil: (await r.json()) as Perfil }
+  } catch {
+    return { status: 0 }
+  }
+}
+
+/** Spec 002: GET /v1/equipments com o token da sessão atual. */
+export async function buscarEquipamentos(): Promise<{ itens: Equipamento[] } | { status: number }> {
+  try {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return { status: 401 }
+    const r = await fetch(`${apiBase}/equipments`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!r.ok) return { status: r.status }
+    return { itens: (await r.json()) as Equipamento[] }
   } catch {
     return { status: 0 }
   }

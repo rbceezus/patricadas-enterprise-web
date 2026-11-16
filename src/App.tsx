@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom"
 
 import { dependenciasReais } from "@/lib/supabase"
 import { AreaLogada } from "@/routes/AreaLogada"
+import { CatalogoPage } from "@/routes/catalogo/CatalogoPage"
 import { LoginPage } from "@/routes/login/LoginPage"
 
 function App() {
@@ -11,8 +12,8 @@ function App() {
       <Route
         path="/catalogo"
         element={
-          <AreaLogada titulo="Catálogo">
-            <p className="text-[14px] opacity-70">O catálogo chega na próxima entrega (spec 002/003).</p>
+          <AreaLogada titulo="Catálogo" largura="max-w-[1240px]">
+            <CatalogoPage />
           </AreaLogada>
         }
       />
