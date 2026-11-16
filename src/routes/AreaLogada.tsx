@@ -10,7 +10,16 @@ import { buscarPerfil, supabase } from "@/lib/supabase"
  * Catálogo e Operações ainda não existem: são entregas seguintes. Até lá, a
  * área logada só mostra quem entrou e o botão de sair.
  */
-export function AreaLogada({ titulo, children }: { titulo: string; children?: ReactNode }) {
+export function AreaLogada({
+  titulo,
+  largura = "max-w-[960px]",
+  children,
+}: {
+  titulo: string
+  /** Largura máxima do conteúdo (layout.md: Catálogo 1240px). */
+  largura?: string
+  children?: ReactNode
+}) {
   const navigate = useNavigate()
   const [estado, setEstado] = useState<"carregando" | "fora" | Perfil>("carregando")
 
@@ -35,7 +44,7 @@ export function AreaLogada({ titulo, children }: { titulo: string; children?: Re
   }
 
   return (
-    <div className="mx-auto max-w-[960px] px-14 py-12">
+    <div className={`mx-auto ${largura} px-14 py-12`}>
       <header className="flex items-center justify-between">
         <h1 className="text-[28px] font-semibold">{titulo}</h1>
         <div className="flex items-center gap-4 text-[14px]">
