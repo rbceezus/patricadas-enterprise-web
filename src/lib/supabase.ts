@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 
 import type { Equipamento } from "@/lib/catalogo"
+import type { ResultadoSolicitar, SituacaoPessoa } from "@/lib/emprestimos"
 import type { DependenciasLogin, Perfil } from "@/lib/login"
 
 // Só a chave pública (publishable/anon). A service_role nunca entra no front.
@@ -36,6 +37,41 @@ export async function buscarEquipamentos(): Promise<{ itens: Equipamento[] } | {
     return { itens: (await r.json()) as Equipamento[] }
   } catch {
     return { status: 0 }
+  }
+}
+
+async function tokenAtual(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession()
+  return data.session?.access_token ?? null
+}
+
+/** Spec 003: empréstimos abertos, limite e bloqueio por atraso. */
+export async function buscarMinhaSituacao(): Promise<SituacaoPessoa | null> {
+  try {
+    const token = await tokenAtual()
+    if (!token) return null
+    const r = await fetch(`${apiBase}/loans/me`, { headers: { Authorization: `Bearer ${token}` } })
+    return r.ok ? ((await r.json()) as SituacaoPessoa) : null
+  } catch {
+    return null
+  }
+}
+
+/** Spec 003: POST /v1/loans em nome de quem está logado. */
+export async function solicitarEmprestimo(equipmentId: string): Promise<ResultadoSolicitar> {
+  try {
+    const token = await tokenAtual()
+    if (!token) return { ok: false, codigo: "REDE" }
+    const r = await fetch(`${apiBase}/loans`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ equipmentId }),
+    })
+    const corpo = (await r.json().catch(() => ({}))) as { dueAt?: string; code?: string }
+    if (r.ok && corpo.dueAt) return { ok: true, dueAt: corpo.dueAt }
+    return { ok: false, codigo: corpo.code ?? "REDE" }
+  } catch {
+    return { ok: false, codigo: "REDE" }
   }
 }
 

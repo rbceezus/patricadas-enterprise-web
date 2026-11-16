@@ -14,7 +14,15 @@ import {
   filtrar,
   patrimonio,
 } from "@/lib/catalogo"
-import { buscarEquipamentos } from "@/lib/supabase"
+import {
+  MENSAGENS_SOLICITAR,
+  type SituacaoPessoa,
+  aplicarEmprestimo,
+  bloqueio,
+  formatarData,
+  mensagemDe,
+} from "@/lib/emprestimos"
+import { buscarEquipamentos, buscarMinhaSituacao, solicitarEmprestimo } from "@/lib/supabase"
 
 const COR: Record<Situacao, string> = {
   DISPONIVEL: "ok",
@@ -38,7 +46,17 @@ function Pill({ situacao }: { situacao: Situacao }) {
   )
 }
 
-export function CardEquipamento({ e }: { e: Equipamento }) {
+export function CardEquipamento({
+  e,
+  enviando = false,
+  bloqueadoPor = null,
+  onSolicitar,
+}: {
+  e: Equipamento
+  enviando?: boolean
+  bloqueadoPor?: string | null
+  onSolicitar?: (e: Equipamento) => void
+}) {
   const credito = e.image && [e.image.author, e.image.license].filter(Boolean).join(" · ")
   return (
     <article className="flex flex-col gap-3 rounded-xl border border-[var(--color-divider)] bg-[var(--color-surface)] p-[18px]">
@@ -69,9 +87,14 @@ export function CardEquipamento({ e }: { e: Equipamento }) {
         <Pill situacao={e.status} />
       </div>
       <p className="text-[13px] opacity-75">{detalhe(e)}</p>
-      {/* Solicitar empréstimo é a spec 003; por ora o botão só mostra o estado. */}
-      <Button type="button" size="block" disabled title="Solicitação chega com a spec 003">
-        {e.status === "DISPONIVEL" ? "Solicitar" : ROTULO_SITUACAO[e.status]}
+      <Button
+        type="button"
+        size="block"
+        disabled={e.status !== "DISPONIVEL" || enviando || !!bloqueadoPor}
+        title={e.status === "DISPONIVEL" && bloqueadoPor ? bloqueadoPor : undefined}
+        onClick={() => onSolicitar?.(e)}
+      >
+        {e.status !== "DISPONIVEL" ? ROTULO_SITUACAO[e.status] : enviando ? "Solicitando…" : "Solicitar"}
       </Button>
     </article>
   )
@@ -81,16 +104,41 @@ export function CatalogoPage() {
   const [itens, setItens] = useState<Equipamento[] | "carregando" | "erro">("carregando")
   const [filtro, setFiltro] = useState<Filtro>("TODOS")
   const [busca, setBusca] = useState("")
+  const [situacao, setSituacao] = useState<SituacaoPessoa | null>(null)
+  const [enviandoId, setEnviandoId] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<{ tipo: "ok" | "erro"; texto: string } | null>(null)
 
   useEffect(() => {
     let ativo = true
-    buscarEquipamentos().then((r) => {
-      if (ativo) setItens("itens" in r ? r.itens : "erro")
+    Promise.all([buscarEquipamentos(), buscarMinhaSituacao()]).then(([r, s]) => {
+      if (!ativo) return
+      setItens("itens" in r ? r.itens : "erro")
+      setSituacao(s)
     })
     return () => {
       ativo = false
     }
   }, [])
+
+  async function solicitar(e: Equipamento) {
+    if (!Array.isArray(itens)) return
+    setAviso(null)
+    setEnviandoId(e.id)
+    const r = await solicitarEmprestimo(e.id)
+    setEnviandoId(null)
+    if (r.ok) {
+      const novo = aplicarEmprestimo(itens, situacao, e, r.dueAt)
+      setItens(novo.itens)
+      setSituacao(novo.situacao)
+      setAviso({ tipo: "ok", texto: `${e.name} emprestado. Devolva até ${formatarData(r.dueAt)}.` })
+      return
+    }
+    setAviso({ tipo: "erro", texto: mensagemDe(r.codigo) })
+    // Item pego por outra pessoa ou regra mudou: recarrega para mostrar o estado real.
+    const [lista, s] = await Promise.all([buscarEquipamentos(), buscarMinhaSituacao()])
+    if ("itens" in lista) setItens(lista.itens)
+    setSituacao(s)
+  }
 
   if (itens === "carregando") return <p className="text-[14px] opacity-60">Carregando equipamentos…</p>
   if (itens === "erro")
@@ -101,11 +149,36 @@ export function CatalogoPage() {
     )
 
   const visiveis = filtrar(itens, filtro, busca)
+  const motivoBloqueio = bloqueio(situacao)
 
   return (
     <div className="flex flex-col gap-6">
+      {situacao?.bloqueadoPorAtraso ? (
+        <p
+          role="alert"
+          className="rounded-lg border border-[#7a3b3b] bg-[rgba(122,59,59,0.14)] px-4 py-3 text-[14px] text-[#e88b8b]"
+        >
+          {MENSAGENS_SOLICITAR.ATRASO}
+        </p>
+      ) : null}
+      {aviso ? (
+        <p
+          role="status"
+          className="rounded-lg border px-4 py-3 text-[14px]"
+          style={{
+            color: `var(--color-state-${aviso.tipo === "ok" ? "ok" : "danger"}-fg)`,
+            background: `var(--color-state-${aviso.tipo === "ok" ? "ok" : "danger"}-bg)`,
+            borderColor: `var(--color-state-${aviso.tipo === "ok" ? "ok" : "danger"}-bd)`,
+          }}
+        >
+          {aviso.texto}
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-[14px] opacity-70">{contagem(itens)}</p>
+        <p className="text-[14px] opacity-70">
+          {contagem(itens)}
+          {situacao ? ` · ${situacao.emprestimos.length} de ${situacao.limite} itens em seu nome` : ""}
+        </p>
         <Input
           type="search"
           placeholder="Buscar equipamento"
@@ -139,7 +212,13 @@ export function CatalogoPage() {
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(292px,1fr))] gap-4">
           {visiveis.map((e) => (
-            <CardEquipamento key={e.id} e={e} />
+            <CardEquipamento
+              key={e.id}
+              e={e}
+              enviando={enviandoId === e.id}
+              bloqueadoPor={motivoBloqueio}
+              onSolicitar={solicitar}
+            />
           ))}
         </div>
       )}
